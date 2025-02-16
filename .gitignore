@@ -135,6 +135,7 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+venv_movie_rcmm/
 
 # Spyder project settings
 .spyderproject
@@ -169,3 +170,38 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+# Research
+Technical Challenge ML.pdf
+
+# Virtual Environment
+venv/
+.env
+.venv
+ENV/
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Model files
+*.pkl
+*.h5
+*.model
+*.joblib
+
+# Data
+data/raw/
+data/processed/
+*.csv
+*.json
+
+# Logs
+logs/
+*.log
+
+# System Files
+.DS_Store
+Thumbs.db
