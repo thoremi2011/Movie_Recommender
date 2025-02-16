@@ -20,10 +20,11 @@ def create_project_structure():
         'src/utils',
         'ci/.github/workflows',
         'docs',
-        'infra/kubernetes',
+        'infra/terraform',
         'tests',
         'data/raw',
         'data/processed',
+        'notebooks'
     ]
     
     # Create all directories
@@ -66,12 +67,16 @@ def create_project_structure():
         'ci/.github/workflows/main.yml',
         
         # Infrastructure files
-        'infra/docker-compose.yml',
-        'infra/kubernetes/deployment.yaml',
+        'infra/terraform/main.tf',
+        'infra/terraform/variables.tf',
+        'infra/terraform/outputs.tf',
         
         # Root files
         'requirements.txt',
         'Dockerfile',
+        'run_services.py',
+        '.gitignore',
+        'README.md'
     ]
     
     # Create all files
