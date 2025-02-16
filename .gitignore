@@ -136,6 +136,7 @@ ENV/
 env.bak/
 venv.bak/
 venv_movie_rcmm/
+venv_movie_rcmm_v2/
 
 # Spyder project settings
 .spyderproject
@@ -174,11 +175,7 @@ cython_debug/
 # Research
 Technical Challenge ML.pdf
 
-# Virtual Environment
-venv/
-.env
-.venv
-ENV/
+
 
 # IDEs
 .idea/
