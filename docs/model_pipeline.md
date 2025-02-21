@@ -18,17 +18,26 @@ Models are defined in a configuration that can be loaded from a local JSON file 
 Example configuration:
 ```json
 {
-  "all-MiniLM-L6-v2": {
-    "type": "sentence_transformer",
-    "model_path": "sentence-transformers/all-MiniLM-L6-v2",
-    "RAM": 0.5,
-    "preload": true
-  },
-  "custom-onnx-model": {
+  "paraphrase-MiniLM-L6-v2": {
+      "model_path": "sentence-transformers/paraphrase-MiniLM-L6-v2",
+      "embeddings_path": "s3://my-bucket/data/embeddings/embeddings_paraphrase_MiniLM.npy", 
+      "type": "sentence_transformer",
+      "tokenizer_model": "",
+      "preprocces":"",
+      "pooling":"",
+      "RAM": 0.4,
+      "preload": true
+    },
+  "my_custom_onnx_model_(beta)": {
     "type": "s3",
-    "model_path": "s3://my-bucket/models/custom.onnx",
-    "RAM": 1.2
-  }
+    "model_path": "s3://my-bucket/path/to/model.onnx",
+    "preprocessing": "custom",    
+    "tokenizer": "custom",        
+    "tokenizer_model": "custom",  
+    "pooling": "mean",
+    "RAM": 1.0,
+    "preload": false
+    }
 }
 ```
 
@@ -47,7 +56,70 @@ Implemented wrappers include:
 - `BertEmbeddingWrapper` for BERT-specific models
 - `SageMakerEmbeddingWrapper` for models deployed on SageMaker
 
-### 3. Memory Management and Optimization
+### 3. SageMaker Integration Details
+
+The `SageMakerEmbeddingWrapper` handles model inference through SageMaker endpoints while maintaining local control over preprocessing and pooling:
+
+1. **Preprocessing Pipeline**:
+   ```python
+   class SageMakerEmbeddingWrapper(BaseEmbeddingModel):
+       def encode(self, sentences: list) -> np.ndarray:
+           # Local preprocessing and tokenization
+           processed = [self.text_preprocessor(sentence) for sentence in sentences]
+           inputs = self.tokenizer(
+               processed, 
+               return_tensors="np", 
+               padding=True, 
+               truncation=True
+           )
+   ```
+
+2. **SageMaker Inference**:
+   - Send tokenized inputs to SageMaker endpoint
+   - Receive token-level embeddings back
+   ```python
+   payload = json.dumps({"instances": inputs["input_ids"].tolist()})
+   response = self.client.invoke_endpoint(
+       EndpointName=self.endpoint_name,
+       Body=payload,
+       ContentType='application/json'
+   )
+   token_embeddings = json.loads(response['Body'].read().decode('utf-8'))
+   ```
+
+3. **Post-processing**:
+   - Apply local pooling strategy to get sentence embeddings
+   ```python
+   if self.pooling_fn is not None and "attention_mask" in inputs:
+       sentence_embeddings = self.pooling_fn(
+           token_embeddings, 
+           inputs["attention_mask"]
+       )
+   ```
+
+This approach:
+- Reduces data transfer (only sending tokenized inputs)
+- Maintains consistency in preprocessing across environments
+- Allows flexible pooling strategies
+- Keeps the heavy compute (model inference) in SageMaker
+
+Configuration example:
+```json
+{
+  "my-sagemaker-model_v2_(beta_a2)": {
+      "model_path": "sagemaker_endpoint",
+      "embeddings_path": "s3://my-bucket/data/embeddings/my-sagemaker-model-embeddings.npy",
+      "type": "sagemaker",
+      "tokenizer_model": "",
+      "preprocces":"",
+      "pooling":"",
+      "RAM": 0.0,
+      "preload": false
+    }
+}
+```
+
+### 4. Memory Management and Optimization
 The system efficiently manages memory by:
 - Tracking RAM usage per model
 - Automatically unloading models when available memory is low using a least-memory-intensive strategy
@@ -59,7 +131,7 @@ def free_memory(required_ram_gb: float):
     """Frees models from highest to lowest RAM usage until enough memory is available"""
 ```
 
-### 4. Model Loading Pipeline
+### 5. Model Loading Pipeline
 The pipeline for loading and using models includes:
 1. **Configuration Loading**:
    ```python
