@@ -1,10 +1,10 @@
 # Cloud Deployment Pipeline for Movie Recommender
 
-This document outlines the cloud deployment pipeline for the **Movie Recommender** application using **AWS ECS (Fargate)** and **Terraform**.
+This is the cloud deployment pipeline I’ve set up for the **Movie Recommender** application using **AWS ECS (Fargate)** and **Terraform**.
 
 ## Pipeline Overview
 
-The deployment pipeline follows these steps:
+The deployment follows these steps:
 
 1. **Build and Push Docker Image**
 2. **Deploy Infrastructure with Terraform**
@@ -13,7 +13,7 @@ The deployment pipeline follows these steps:
 
 ## Step 1: Build and Push Docker Image
 
-Before deploying, we need to build our Docker image, tag it, and push it to **AWS ECR**.
+Before deploying, I first build the Docker image, tag it, and push it to **AWS ECR**.
 
 ```sh
 # Authenticate Docker with AWS ECR
@@ -31,7 +31,7 @@ docker push <aws_account_id>.dkr.ecr.eu-west-1.amazonaws.com/movie_recommender:l
 
 ## Step 2: Deploy Infrastructure with Terraform
 
-With the Docker image in **ECR**, we now provision infrastructure using **Terraform**.
+Once the Docker image is in **ECR**, I provision the cloud infrastructure using **Terraform**.
 
 ```sh
 # Initialize Terraform
@@ -49,31 +49,31 @@ terraform apply tfplan
 
 ### Infrastructure Components
 Terraform provisions the following AWS resources:
-- **Amazon Elastic Container Registry (ECR)** for storing container images
-- **Amazon ECS (Fargate)** cluster for running the application
+- **Amazon Elastic Container Registry (ECR)** to store container images
+- **Amazon ECS (Fargate)** to run the application
 - **IAM Roles and Policies** for ECS execution and task permissions
-- **Application Load Balancer (ALB)** to expose the service externally
-- **Security Groups** to control network access
-- **AWS SSM Parameters** for application configuration
-- **CloudWatch Logs** for monitoring logs
+- **Application Load Balancer (ALB)** to route traffic
+- **Security Groups** to enforce access control
+- **AWS SSM Parameters** for configuration management
+- **CloudWatch Logs** for logging and monitoring
 
 ## Step 3: Launch ECS Service with Load Balancer
 
-Once the infrastructure is provisioned, **Terraform** automatically deploys an **ECS service** that:
-- Uses the latest **Docker image** from **ECR**
-- Runs on **Fargate** with assigned CPU and memory limits
+Once Terraform provisions the infrastructure, it automatically deploys an **ECS service** that:
+- Pulls the latest **Docker image** from **ECR**
+- Runs on **Fargate** with predefined CPU and memory limits
 - Registers itself with the **Application Load Balancer (ALB)**
-- Uses AWS SSM parameters for environment configuration
-- Logs application activity to **CloudWatch Logs**
+- Uses AWS SSM parameters for dynamic configuration
+- Logs events to **CloudWatch Logs**
 
-### Verify Deployment
-After Terraform completes, verify that the ECS service is running:
+### Verifying Deployment
+After Terraform completes, I check if the ECS service is running:
 
 ```sh
 aws ecs list-tasks --cluster movie-recommender-cluster
 ```
 
-Check logs for errors:
+To check for errors, I look at the logs:
 
 ```sh
 aws logs tail /ecs/movie-recommender-task --follow
@@ -82,7 +82,7 @@ aws logs tail /ecs/movie-recommender-task --follow
 ## Step 4: Monitor and Scale the Application
 
 ### Auto Scaling Configuration
-The application can automatically scale based on **CPU utilization** using **AWS Application Auto Scaling**:
+The application scales dynamically based on **CPU utilization** using **AWS Application Auto Scaling**.
 
 ```hcl
 resource "aws_appautoscaling_target" "ecs_target" {
@@ -94,7 +94,7 @@ resource "aws_appautoscaling_target" "ecs_target" {
 }
 ```
 
-A scaling policy ensures the application scales up when CPU usage exceeds **80%**:
+A simple policy scales the service up when CPU usage exceeds **80%**:
 
 ```hcl
 resource "aws_appautoscaling_policy" "ecs_policy_cpu" {
@@ -114,9 +114,9 @@ resource "aws_appautoscaling_policy" "ecs_policy_cpu" {
 ```
 
 ### Logs and Monitoring
-- **CloudWatch Logs** captures logs from the ECS tasks.
-- **AWS WAF** is configured to prevent excessive API requests.
-- **AWS Budgets** alerts when monthly costs exceed defined limits.
+- **CloudWatch Logs** captures logs from ECS tasks.
+- **AWS WAF** prevents excessive API requests.
+- **AWS Budgets** sends alerts if costs exceed predefined limits.
 
 ## Conclusion
-This pipeline ensures a **scalable, monitored, and secure** deployment of the Movie Recommender application using AWS ECS, ECR, and Terraform.
+This pipeline ensures that the Movie Recommender application is deployed in a **scalable, secure, and monitored** environment using AWS ECS, ECR, and Terraform.
