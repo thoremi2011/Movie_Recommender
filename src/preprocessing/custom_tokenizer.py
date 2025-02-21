@@ -7,7 +7,7 @@ class CustomTokenizer:
         If no vocabulary is provided, a default one is used.
         """
         if vocab is None:
-            # Default vocabulary for demonstration purposes.
+            # Default vocabulary for demonstration purposes
             self.vocab = {
                 "<UNK>": 0,
                 "this": 1,

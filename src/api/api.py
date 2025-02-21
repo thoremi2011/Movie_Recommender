@@ -11,7 +11,7 @@ from src.utils.logger import logger
 from src.model.embeddings import load_embedding_model
 from src.config.model_config import MODEL_CONFIG
 
-# Importar el servicio de recomendación
+# Import recommendation service
 from src.api.recommendation_service import get_movie_recommendations
 
 
@@ -26,7 +26,7 @@ async def lifespan(app: FastAPI):
         if config.get("preload", False):
             logger.info(f"Preloading model: {model_name}")
             try:
-                # Warm-up: ejecutar una recomendación completa
+                # Warm-up: execute a complete recommendation
                 logger.info(f"Warming up complete pipeline for model: {model_name}")
                 warm_up_query = "Action movie with explosions and car chases"
                 _ = get_movie_recommendations(
@@ -36,16 +36,16 @@ async def lifespan(app: FastAPI):
                 )
                 logger.info(f"Model {model_name} warmed up successfully")
             except Exception as e:
-                logger.error(f"Error al precargar el modelo '{model_name}': {e}")
+                logger.error(f"Error preloading model '{model_name}': {e}")
 
-    # 'yield' entrega el control a la app; una vez la app se detenga, el código posterior
-    # al yield se ejecuta, equivalente a 'shutdown' o limpieza final.
+    # 'yield' gives control to the app; once the app stops, the code after
+    # yield executes, equivalent to 'shutdown' or final cleanup.
     yield
 
-    # Log de cierre de la aplicación
+    # Log application shutdown
     logger.info("The app is shutting down...")
 
-# Definir la aplicación FastAPI con el lifespan
+# Define FastAPI application with lifespan
 app = FastAPI(title="Movie Recommender API",lifespan=lifespan)
 
 
@@ -94,7 +94,7 @@ async def recommend(request: RecommendRequest):
             max_rating=request.max_rating
         )
 
-        # Obtenemos la configuración usada para el modelo para verificar el modelo seleccionado.
+        # Get the configuration used for the model to verify the selected model
         from src.config.model_config import MODEL_CONFIG
         config = MODEL_CONFIG.get(request.model_name, {})
         model_info = {
@@ -110,4 +110,4 @@ async def recommend(request: RecommendRequest):
         )
     except Exception as e:
         logger.error(f"Error in /recommend endpoint: {e}")
-        raise HTTPException(status_code=500, detail=str(e)) 
+        raise HTTPException(status_code=500, detail=str(e))

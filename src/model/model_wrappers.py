@@ -42,11 +42,11 @@ class SentenceTransformerWrapper(BaseEmbeddingModel):
     def __init__(self, model_name_or_path: str):
         from sentence_transformers import SentenceTransformer
         self.model = SentenceTransformer(model_name_or_path)
-        # Forzar inicialización de CUDA si está disponible
+        # Force CUDA initialization if available
         import torch
         if torch.cuda.is_available():
             self.model.to('cuda')
-            # Forzar inicialización de CUDA
+            # Force CUDA initialization
             torch.cuda.init()
     
     def encode(self, sentences: list, show_progress_bar: bool = True):

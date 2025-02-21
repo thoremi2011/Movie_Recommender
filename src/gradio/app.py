@@ -11,7 +11,7 @@ from src.utils.logger import logger
 import concurrent.futures
 import html
 
-# Executor para manejar operaciones pesadas en un solo worker.
+# Executor to handle heavy operations in a single worker
 executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)
 
 def cleanup():
@@ -29,7 +29,7 @@ def predict_async(*args):
         future = executor.submit(recommend_movies, *args)
         result = future.result()
         logger.info(f"Result in predict_async: {result[1]}")
-        return result  # Retornamos directamente el resultado (html, debug)
+        return result  # Return result directly (html, debug)
     except Exception as e:
         logger.error(f"Error in predict_async: {e}")
         return f"Error: {str(e)}", {"error": str(e)}
@@ -43,7 +43,7 @@ def recommend_movies(query_sentence: str, model_name: str, date_from: str, date_
         logger.info(f"Starting recommendation with model: {model_name}")
         logger.info(f"Parameters: query='{query_sentence}', dates={date_from}-{date_to}, pop={min_popularity}, rating={min_rating}")
         
-        # Forzar limpieza de caché si se cambia el modelo.
+        # Force cache cleanup if model changes
         global last_used_model
         if 'last_used_model' not in globals() or last_used_model != model_name:
             logger.info(f"Model change detected: {last_used_model if 'last_used_model' in globals() else 'None'} -> {model_name}")
@@ -65,14 +65,14 @@ def recommend_movies(query_sentence: str, model_name: str, date_from: str, date_
         if not recommendations:
             return "No recommendations found matching your criteria.", {"error": "No results"}
             
-        # Construir el HTML con escapes para caracteres especiales.
+        # Build HTML with escaped special characters
         user_friendly = "<div style='display: flex; flex-wrap: wrap;'>"
         for rec in recommendations:
             title = rec.get("title", "Unknown")
             desc = rec.get("overview", "No Description")
             score = rec.get("score", 0.0)
             match_percentage = int(score * 100)
-            # Escapar caracteres especiales para evitar errores en el DOM
+            # Escape special characters to avoid DOM errors
             title_escaped = html.escape(title)
             desc_escaped = html.escape(desc)
             card = f"""
@@ -98,7 +98,7 @@ def recommend_by_movie(selected_movie: str, model_name: str, date_from: str, dat
     """
     try:
         df = get_movie_df()
-        # Obtener el overview de la película seleccionada
+        # Get the selected movie's overview
         selected_movie_data = df[df['title'] == selected_movie].iloc[0]
         movie_overview = selected_movie_data['overview']
         
@@ -109,7 +109,7 @@ def recommend_by_movie(selected_movie: str, model_name: str, date_from: str, dat
             date_to=date_to,
             min_popularity=min_popularity,
             min_rating=min_rating,
-            exclude_movies=[selected_movie]  # Excluir la película seleccionada
+            exclude_movies=[selected_movie]  # Exclude the selected movie
         )
     except Exception as e:
         return f"Error: {str(e)}", {"error": str(e)}
@@ -137,7 +137,7 @@ def load_movie_titles():
 
 def reload_config():
     """
-    Reload the configuration and update both model dropdowns.
+    Reloads the configuration and updates both model dropdowns.
     """
     logger.debug("Entering reload_config function")
     try:
@@ -158,7 +158,8 @@ def reload_config():
         )
 
     except Exception as e:
-        logger.exception("Error in reload_config")  # Esto loguea el traceback completo
+        # This logs the complete traceback
+        logger.exception("Error in reload_config")
         error_msg = f"Error reloading config: {str(e)}"
         logger.error(error_msg, exc_info=True)
         return [], []
@@ -187,7 +188,7 @@ with gr.Blocks() as demo:
                         rating_range = gr.Slider(minimum=0, maximum=10, value=0, step=0.1,
                                                  label="Minimum Rating (0-10)", interactive=True)
             
-            # Usamos gr.HTML en lugar de gr.Markdown para renderizar HTML complejo.
+            # Use gr.HTML instead of gr.Markdown to render complex HTML
             output_html = gr.HTML(label="Recommended Movies")
             output_json = gr.JSON(label="Debug Info")
             recommend_btn = gr.Button("Get Recommendations", variant="primary")
@@ -228,7 +229,7 @@ with gr.Blocks() as demo:
                 show_progress=True
             )
     
-    # Botón para recargar la configuración (actualiza ambos dropdowns de modelo)
+    # Button to reload configuration (updates both model dropdowns)
     reload_btn = gr.Button("Reload Config")
     reload_btn.click(
         fn=reload_config,

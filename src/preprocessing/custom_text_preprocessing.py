@@ -1,4 +1,3 @@
-
 def preprocess_custom(text: str) -> str:
     """
     Custom preprocessing routine.
@@ -7,5 +6,5 @@ def preprocess_custom(text: str) -> str:
     """
     import re
     text = text.lower().strip()
-    text = re.sub(r'[^\w\s]', '', text)  # Remove punctuation.
-    return text 
+    text = re.sub(r'[^\w\s]', '', text)  # Remove punctuation
+    return text

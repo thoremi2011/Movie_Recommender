@@ -11,25 +11,25 @@ from src.model.model_wrappers import (
 from src.utils.s3_utils import download_model_from_s3
 import psutil
 
-# Diccionario global para almacenar los modelos cargados en memoria.
+# Global dictionary to store loaded models in memory
 LOADED_MODELS = {}
 
 def _get_available_ram_gb() -> float:
     """
-    Retorna la memoria RAM disponible (en GB) usando psutil.virtual_memory().
+    Returns available RAM (in GB) using psutil.virtual_memory().
     """
     mem = psutil.virtual_memory()
     return mem.available / (1024**3)
 
 def _free_memory(required_ram_gb: float):
     """
-    Libera modelos de LOADED_MODELS (del mayor uso de RAM al menor) 
-    hasta que haya memoria suficiente para 'required_ram_gb'.
-    Si tras eliminar todos los modelos no se puede liberar suficiente memoria, 
-    lanza MemoryError.
+    Frees models from LOADED_MODELS (from highest to lowest RAM usage)
+    until there is enough memory for 'required_ram_gb'.
+    If after removing all models there is not enough memory available,
+    raises MemoryError.
     """
-    # Ordena los modelos en memoria en orden descendente de uso RAM 
-    # (sacado del 'RAM' en MODEL_CONFIG).
+    # Sort loaded models in descending order by RAM usage
+    # (taken from 'RAM' in MODEL_CONFIG)
     loaded_model_names = sorted(
         LOADED_MODELS.keys(),
         key=lambda name: float(MODEL_CONFIG.get(name, {}).get("RAM", 0.0)),
@@ -39,17 +39,17 @@ def _free_memory(required_ram_gb: float):
     while True:
         available_ram_gb = _get_available_ram_gb()
         if available_ram_gb >= required_ram_gb:
-            # Ya hay memoria suficiente.
+            # There is enough memory
             return
 
         if not loaded_model_names:
-            # No quedan modelos que liberar y todavía no hay memoria.
+            # No more models to free and still not enough memory
             raise MemoryError(
-                f"No hay suficiente memoria para cargar el nuevo modelo. "
-                f"Se requieren ~{required_ram_gb:.2f}GB, "
-                f"y no se pudo liberar más memoria."
+                f"Not enough memory to load the new model. "
+                f"Required ~{required_ram_gb:.2f}GB, "
+                f"and could not free more memory."
             )
-        # Elimina el modelo de mayor RAM.
+        # Remove the model with highest RAM usage
         model_to_remove = loaded_model_names.pop(0)
         del LOADED_MODELS[model_to_remove]
 
@@ -66,7 +66,7 @@ def load_embedding_model(model_name: str = "sentence-transformers/all-MiniLM-L6-
     Returns:
         A model wrapper instance configured with the appropriate pipeline components.
     """
-    # Primero verificamos si el modelo ya está cargado en memoria (caché).
+    # First check if the model is already loaded in memory (cache)
     if model_name in LOADED_MODELS:
         return LOADED_MODELS[model_name]
 
@@ -74,19 +74,19 @@ def load_embedding_model(model_name: str = "sentence-transformers/all-MiniLM-L6-
     model_type = config.get("type", "sentence_transformer").lower()
     model_path = config.get("model_path", model_name)
     
-    # Comprobamos la RAM libre, si el campo "RAM" existe en el JSON y, si no hay suficiente,
-    # intentamos liberar modelos del caché.
-    required_ram_gb = float(config.get("RAM", 0.0))  # GB estimados que requiere el modelo
+    # Check free RAM if "RAM" field exists in JSON and, if not enough,
+    # try to free models from cache
+    required_ram_gb = float(config.get("RAM", 0.0))  # Estimated GB required by the model
     if required_ram_gb > 0.0:
         available_ram_gb = _get_available_ram_gb()
         if available_ram_gb < required_ram_gb:
-            # Intenta liberar memoria removiendo modelos de la caché.
+            # Try to free memory by removing models from cache
             _free_memory(required_ram_gb)
-            # Tras liberar, se comprueba de nuevo la memoria.
+            # After freeing, check memory again
             if _get_available_ram_gb() < required_ram_gb:
                 raise MemoryError(
-                    f"No hay suficiente memoria para cargar el modelo '{model_name}'. "
-                    f"Se requieren ~{required_ram_gb:.2f}GB, pero no se pudo liberar suficiente memoria."
+                    f"Not enough memory to load model '{model_name}'. "
+                    f"Required ~{required_ram_gb:.2f}GB, but could not free enough memory."
                 )
 
     if model_type == "s3":
@@ -103,7 +103,7 @@ def load_embedding_model(model_name: str = "sentence-transformers/all-MiniLM-L6-
     else:
         raise ValueError(f"Unsupported model type: {model_type}")
     
-    # Guardamos el modelo para uso posterior.
+    # Save model for later use
     LOADED_MODELS[model_name] = model_wrapper
     
     return model_wrapper

@@ -37,7 +37,7 @@ def load_model_config_from_ssm():
 
 def load_model_config_from_file():
     """
-    Carga la configuración de models_config.json local.
+    Loads configuration from local models_config.json file.
     """
     logger.info("Loading config from local file...")
     config_path = os.path.join(os.path.dirname(__file__), "models_config.json")
@@ -54,23 +54,23 @@ def load_model_config():
     use_ssm = os.getenv("USE_SSM", "false").lower() == "true"
 
     if use_ssm:
-        logger.info("USE_SSM=True: Intentando cargar la config desde SSM...")
+        logger.info("USE_SSM=True: Attempting to load config from SSM...")
         config_from_ssm = load_model_config_from_ssm()
         if config_from_ssm is None:
-            logger.warning("No se pudo cargar desde SSM, fallback al archivo local")
+            logger.warning("Could not load from SSM, falling back to local file")
             config = load_model_config_from_file()
         else:
             config = config_from_ssm
     else:
-        logger.info("USE_SSM=False: Cargando config desde archivo local")
+        logger.info("USE_SSM=False: Loading config from local file")
         config = load_model_config_from_file()
 
-    # Actualizar la variable global MODEL_CONFIG en sitio para mantener la referencia
+    # Update global MODEL_CONFIG in place to maintain reference
     global MODEL_CONFIG
     MODEL_CONFIG.clear()
     MODEL_CONFIG.update(config)
-    logger.info(f"MODEL_CONFIG actualizado a: {MODEL_CONFIG}")
+    logger.info(f"MODEL_CONFIG updated to: {MODEL_CONFIG}")
     return MODEL_CONFIG
 
-# Cargar configuración al iniciar
+# Load configuration on startup
 MODEL_CONFIG = load_model_config()

@@ -25,21 +25,21 @@ logging.basicConfig(
 
 # Create a global logger
 logger = logging.getLogger('MovieRecommender')
-logger.setLevel(logging.DEBUG)  # Cambiar a DEBUG para ver todos los logs
+logger.setLevel(logging.DEBUG)  # Set to DEBUG to see all logs
 
-# Handler para archivo
+# File handler
 file_handler = logging.FileHandler(LOG_FILE)
 file_handler.setLevel(logging.DEBUG)
 
-# Handler para consola
+# Console handler
 console_handler = logging.StreamHandler(sys.stdout)
 console_handler.setLevel(logging.DEBUG)
 
-# Formato para los logs
+# Log format
 formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
 file_handler.setFormatter(formatter)
 console_handler.setFormatter(formatter)
 
-# Añadir los handlers al logger
+# Add handlers to logger
 logger.addHandler(file_handler)
-logger.addHandler(console_handler) 
+logger.addHandler(console_handler)
