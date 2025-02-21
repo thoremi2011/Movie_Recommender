@@ -1,19 +1,19 @@
 # Hot-Swappable Model Architecture
 
-This document describes the implementation of a flexible and maintainable architecture that allows for dynamic model loading and seamless integration of new models.
+This is how I’ve structured a flexible and maintainable architecture that enables dynamic model loading and seamless integration of new models.
 
 ## Overview
 
-The system supports multiple embedding models that can be:
-- Dynamically loaded at runtime
-- Swapped without restarting the application (**if no custom preprocessing, tokenization, or pooling is required**)
-- Cached for improved performance
-- Automatically managed in terms of memory
+The system is designed to handle multiple embedding models that can:
+- Be dynamically loaded at runtime
+- Be swapped without restarting the application (**as long as no custom preprocessing, tokenization, or pooling is required**)
+- Be cached to improve performance
+- Be automatically managed in terms of memory
 
 ## Architecture Components
 
 ### 1. Model Configuration
-Models are defined in a configuration that can be loaded from a local JSON file or AWS SSM Parameter Store.
+Model configurations are stored in either a local JSON file or AWS SSM Parameter Store.
 
 Example configuration:
 ```json
@@ -42,7 +42,7 @@ Example configuration:
 ```
 
 ### 2. Model Wrappers and Standardized Interface
-A wrapper pattern is used to standardize the interface for different types of models. Each wrapper implements the `BaseEmbeddingModel` interface:
+To ensure consistency, I use a wrapper pattern that standardizes the interface for different types of models. Each wrapper follows the `BaseEmbeddingModel` structure:
 ```python
 class BaseEmbeddingModel(ABC):
     @abstractmethod
@@ -50,21 +50,20 @@ class BaseEmbeddingModel(ABC):
         """Convert sentences to embeddings"""
         pass
 ```
-Implemented wrappers include:
+Implemented wrappers:
 - `SentenceTransformerWrapper` for Hugging Face models
-- `OnnxEmbeddingWrapper` for ONNX format models (compatible with TensorFlow and PyTorch)
-- `BertEmbeddingWrapper` for BERT-specific models
+- `OnnxEmbeddingWrapper` for ONNX models (compatible with TensorFlow and PyTorch)
+- `BertEmbeddingWrapper` for BERT-based models
 - `SageMakerEmbeddingWrapper` for models deployed on SageMaker
 
 ### 3. SageMaker Integration Details
 
-The `SageMakerEmbeddingWrapper` handles model inference through SageMaker endpoints while maintaining local control over preprocessing and pooling:
+The `SageMakerEmbeddingWrapper` allows inference via SageMaker endpoints while keeping preprocessing and pooling local.
 
 1. **Preprocessing Pipeline**:
    ```python
    class SageMakerEmbeddingWrapper(BaseEmbeddingModel):
        def encode(self, sentences: list) -> np.ndarray:
-           # Local preprocessing and tokenization
            processed = [self.text_preprocessor(sentence) for sentence in sentences]
            inputs = self.tokenizer(
                processed, 
@@ -75,8 +74,6 @@ The `SageMakerEmbeddingWrapper` handles model inference through SageMaker endpoi
    ```
 
 2. **SageMaker Inference**:
-   - Send tokenized inputs to SageMaker endpoint
-   - Receive token-level embeddings back
    ```python
    payload = json.dumps({"instances": inputs["input_ids"].tolist()})
    response = self.client.invoke_endpoint(
@@ -88,7 +85,6 @@ The `SageMakerEmbeddingWrapper` handles model inference through SageMaker endpoi
    ```
 
 3. **Post-processing**:
-   - Apply local pooling strategy to get sentence embeddings
    ```python
    if self.pooling_fn is not None and "attention_mask" in inputs:
        sentence_embeddings = self.pooling_fn(
@@ -97,11 +93,11 @@ The `SageMakerEmbeddingWrapper` handles model inference through SageMaker endpoi
        )
    ```
 
-This approach:
-- Reduces data transfer (only sending tokenized inputs)
-- Maintains consistency in preprocessing across environments
-- Allows flexible pooling strategies
-- Keeps the heavy compute (model inference) in SageMaker
+This setup ensures:
+- Minimal data transfer (only tokenized inputs are sent)
+- Consistent preprocessing across different environments
+- Flexibility in pooling strategies
+- Heavy compute (model inference) stays within SageMaker
 
 Configuration example:
 ```json
@@ -120,28 +116,29 @@ Configuration example:
 ```
 
 ### 4. Memory Management and Optimization
-The system efficiently manages memory by:
-- Tracking RAM usage per model
-- Automatically unloading models when available memory is low using a least-memory-intensive strategy
-- Caching frequently used models
+To optimize memory usage, the system:
+- Tracks RAM consumption per model
+- Unloads models dynamically when free memory is low
+- Prioritizes model unloading based on memory footprint
+- Caches frequently used models
 
-Example:
+Example function:
 ```python
 def free_memory(required_ram_gb: float):
     """Frees models from highest to lowest RAM usage until enough memory is available"""
 ```
 
 ### 5. Model Loading Pipeline
-The pipeline for loading and using models includes:
-1. **Configuration Loading**:
+The pipeline for handling models follows this sequence:
+1. **Load Configuration**:
    ```python
    config = load_model_config()  # From JSON or SSM
    ```
-2. **Model Initialization**:
+2. **Initialize Model**:
    ```python
-   model = load_embedding_model(model_name)  # Automatically handles caching
+   model = load_embedding_model(model_name)  # Handles caching automatically
    ```
-3. **Embedding Generation**:
+3. **Generate Embeddings**:
    ```python
    embeddings = generate_embeddings(model, sentences)
    ```
@@ -149,54 +146,41 @@ The pipeline for loading and using models includes:
 ## Integration and Model Expansion
 
 ### Adding New Models
-Integrating new models is straightforward:
+Adding new models is simple:
 
-- **For Known Architectures**:  
-  Simply update the configuration (JSON file or SSM) with the model details (type, path, memory requirements). No code changes are necessary.
+- **For Supported Architectures**:  
+  Just update the JSON configuration (or SSM Parameter Store) with model details—no code modifications required.
 
 - **For New Model Types**:  
-  Create a new wrapper that implements the `BaseEmbeddingModel` interface and update the model loading function to handle the new type.
+  Implement a new wrapper based on `BaseEmbeddingModel` and extend `load_embedding_model()` to support it.
 
 Example:
 ```python
 class NewModelWrapper(BaseEmbeddingModel):
     def encode(self, sentences: list) -> np.ndarray:
-        # Custom implementation
         return embeddings
 ```
-After integration, use the reload endpoint to load the updated configuration, making the new model available immediately.
+Once added, the model can be loaded dynamically without restarting the application.
 
 ## Additional Aspects
 
 ### Supported Model Sources
-- Local files
+- Local storage
 - Hugging Face Hub
 - S3 storage
 - SageMaker endpoints
 - ONNX format models
 
 ### Error Handling
-The system robustly manages:
+To ensure robustness, the system manages:
 - Model loading failures
-- Memory allocation issues
+- Memory allocation constraints
 - Configuration errors
-- API endpoint errors
+- API endpoint failures
 
 ### Logging and Monitoring
-Comprehensive logging tracks:
+The system logs:
 - Model loading/unloading events
-- Memory management decisions
-- Configuration changes
+- Memory management actions
+- Configuration updates
 - Performance metrics
-
-### Best Practices
-- **Memory Management**: Configure RAM requirements and preload flags appropriately in the model configuration.
-- **Model Configuration**: Use descriptive model names and include all necessary metadata.
-- **Testing**: Regularly verify memory management, hot-swapping functionality, and embedding consistency.
-
-### Future Improvements
-Potential enhancements include:
-- Model versioning support
-- A/B testing capabilities
-- Performance metrics collection
-- Automated model optimization
