@@ -1,0 +1,105 @@
+# Exclude version control
+.git
+.gitignore
+template.py
+
+# Exclude virtual environments
+venv
+.venv
+venv_movie_rcmm_v2/
+venv_movie_rcmm_v4/
+ENV/
+
+# Unnecessary Python files and folders
+__pycache__
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+*.manifest
+*.spec
+pip-log.txt
+pip-delete-this-directory.txt
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Logs y datos temporales
+logs/
+*.log
+.DS_Store
+
+# Notebooks (opcional, depende si quieres incluirlos)
+notebooks/
+
+# Archivos grandes o datos que no necesitas en el contenedor
+data/raw/
+*.npy
+*.h5
+*.pkl
+*.model
+
+# Documentación
+README.md
+docs/
+
+# Other directories you don't need (e.g., node_modules if it exists)
+node_modules
+
+# Exclude Docker-specific files (optional)
+.dockerignore
+
+docs/
+ci/
+flagged/
+notebooks/
+.gitignore
+README.md
+docs/
+
+# Entornos virtuales
+venv/
+venv_*/
+
+# Archivos de Python
+__pycache__/
+*.pyc
+
+# Archivos de desarrollo
+.git/
+.gitignore
+.env
+
+# Terraform
+infra/
+**/*.tf
+**/*.tfvars
+**/*.tfstate*
+.terraform/
+.terraform.lock.hcl
+
+# Otros
+README.md
+.vscode/
+tests/
+notebooks/
+Contenedor_tmp/

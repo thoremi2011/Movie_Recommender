@@ -137,6 +137,8 @@ env.bak/
 venv.bak/
 venv_movie_rcmm/
 venv_movie_rcmm_v2/
+venv_movie_rcmm_v3/
+venv_movie_rcmm_v4/
 
 # Spyder project settings
 .spyderproject
@@ -191,7 +193,6 @@ Technical Challenge ML.pdf
 
 # Data
 data/raw/
-data/processed/
 *.csv
 *.json
 
@@ -202,3 +203,15 @@ logs/
 # System Files
 .DS_Store
 Thumbs.db
+
+
+# Terraform
+*.tfvars
+*.tfvars.json
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+tfplan
+
+Contenedor_tmp/
