@@ -22,14 +22,25 @@ def clear_cache():
     logger.info("Cache cleared")
 
 def _load_data(model_name: str):
-    """Load and cache data if not already loaded"""
+    """
+    Load movie data and embeddings from storage and cache them in memory.
+    
+    Args:
+        model_name: Name of the model to load embeddings for
+    
+    Returns:
+        tuple: (DataFrame with movie data, numpy array of embeddings)
+    
+    Raises:
+        ValueError: If model configuration or embeddings path is not found
+    """
     try:
         logger.info(f"Requesting data for model: {model_name}")
         logger.info(f"Current _CACHE state: {list(_CACHE.keys())}")
         
         # Load DataFrame if not in cache
         if 'df' not in _CACHE:
-            logger.info("DataFrame not found in cache, loading...")
+            logger.info("Loading movies DataFrame...")
             csv_path = os.getenv("MOVIES_CSV_PATH", "data/processed/movies_processed.csv")
             if csv_path.startswith('s3://'):
                 _CACHE['df'] = read_from_s3(csv_path)

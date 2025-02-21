@@ -13,19 +13,19 @@ if not os.path.exists(LOG_DIR):
 # Define the logfile path
 LOG_FILE = os.path.join(LOG_DIR, 'project.log')
 
-# Configure the logging settings
+# Configure logging with both file and console handlers
 logging.basicConfig(
-    level=logging.INFO,  # Set default logging level to INFO (adjust as needed)
+    level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(module)s.%(funcName)s: %(message)s",
     handlers=[
-        logging.FileHandler(LOG_FILE),  # Save logs to file
-        logging.StreamHandler(sys.stdout)         # Also output logs to console
+        logging.FileHandler(LOG_FILE),
+        logging.StreamHandler(sys.stdout)
     ]
 )
 
 # Create a global logger
 logger = logging.getLogger('MovieRecommender')
-logger.setLevel(logging.DEBUG)  # Set to DEBUG to see all logs
+logger.setLevel(logging.INFO)  # Default to INFO level for production
 
 # File handler
 file_handler = logging.FileHandler(LOG_FILE)

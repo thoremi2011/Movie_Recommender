@@ -16,7 +16,7 @@ LOADED_MODELS = {}
 
 def _get_available_ram_gb() -> float:
     """
-    Returns available RAM (in GB) using psutil.virtual_memory().
+    Get system's available RAM in gigabytes.
     """
     mem = psutil.virtual_memory()
     return mem.available / (1024**3)
@@ -57,14 +57,15 @@ def load_embedding_model(model_name: str = "sentence-transformers/all-MiniLM-L6-
     """
     Loads an embedding model based on the configuration for the specified model_name.
     
-    The MODEL_CONFIG determines:
-      - The model type ('sagemaker', 's3', 'local', or 'huggingface')
-      - The model path.
-      
-    For 's3' models, the model file is downloaded locally.
+    Args:
+        model_name: Name of the model to load, must exist in MODEL_CONFIG
     
     Returns:
-        A model wrapper instance configured with the appropriate pipeline components.
+        BaseEmbeddingModel: Initialized model wrapper ready for generating embeddings
+    
+    Raises:
+        ValueError: If model_type is not supported
+        MemoryError: If there isn't enough RAM to load the model
     """
     # First check if the model is already loaded in memory (cache)
     if model_name in LOADED_MODELS:
