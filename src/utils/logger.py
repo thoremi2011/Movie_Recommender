@@ -43,3 +43,7 @@ console_handler.setFormatter(formatter)
 # Add handlers to logger
 logger.addHandler(file_handler)
 logger.addHandler(console_handler)
+# Prevent log messages from being propagated to the root logger, which already
+# has handlers configured via `basicConfig`. Without this, each log entry would
+# appear twice (once from this logger and once from the root logger).
+logger.propagate = False
